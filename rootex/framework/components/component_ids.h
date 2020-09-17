@@ -30,4 +30,5 @@ enum class ComponentIDs : unsigned int
 	SkyComponent,
 	FogComponent,
 	StaticPointLightComponent,
+	AnimatedModelComponent,
 };
