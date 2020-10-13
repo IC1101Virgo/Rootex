@@ -78,6 +78,7 @@ Application::Application(const String& settingsFile)
 	RenderSystem::GetSingleton();
 	ScriptSystem::GetSingleton();
 	TransformAnimationSystem::GetSingleton();
+	AnimationSystem::GetSingleton();
 
 	auto&& postInitialize = m_ApplicationSettings->find("postInitialize");
 	if (postInitialize != m_ApplicationSettings->end())

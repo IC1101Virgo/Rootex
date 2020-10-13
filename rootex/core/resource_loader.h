@@ -16,11 +16,11 @@ static const inline HashMap<ResourceFile::Type, Vector<String>> SupportedFiles =
 	},
 	{
 	    ResourceFile::Type::Model,
-	    { ".obj", ".blend", ".3ds", ".fbx" },
+	    { ".obj", ".blend", ".3ds", ".fbx", ".dae" },
 	},
 	{
 	    ResourceFile::Type::AnimatedModel,
-	    { ".dae" },
+	    { ".dae", ".fbx" },
 	},
 	{
 	    ResourceFile::Type::Audio,
@@ -28,7 +28,11 @@ static const inline HashMap<ResourceFile::Type, Vector<String>> SupportedFiles =
 	},
 	{
 	    ResourceFile::Type::Image,
+<<<<<<< HEAD
 	    { ".png", ".jpeg", ".jpg", ".dds" },
+=======
+	    { ".png", ".jpeg", ".jpg" },
+>>>>>>> 03c4f8fb... Create node heirarchy and take nodes' calculation into account
 	},
 	{
 	    ResourceFile::Type::Text,

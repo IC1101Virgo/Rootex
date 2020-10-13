@@ -143,8 +143,6 @@ void RenderSystem::update(float deltaMilliseconds)
 	RenderingDevice::GetSingleton()->setDSS();
 	RenderingDevice::GetSingleton()->setAlphaBS();
 
-	AnimationSystem::GetSingleton()->update(deltaMilliseconds);
-
 	perFrameVSCBBinds(fogStart, fogEnd);
 	const Color& fogColor = clearColor;
 	perFramePSCBBinds(fogColor);
