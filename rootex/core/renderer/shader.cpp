@@ -104,7 +104,7 @@ void SkyShader::setSkyTexture(const Texture3D* texture)
 AnimationShader::AnimationShader(const LPCWSTR& vertexPath, const LPCWSTR& pixelPath, const BufferFormat& vertexBufferFormat)
     : Shader(vertexPath, pixelPath, vertexBufferFormat)
 {
-	m_SamplerState = RenderingDevice::GetSingleton()->createSamplerState();
+	m_SamplerState = RenderingDevice::GetSingleton()->createSS();
 }
 
 void AnimationShader::bind() const

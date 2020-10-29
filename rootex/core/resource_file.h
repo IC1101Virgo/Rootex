@@ -160,14 +160,14 @@ class AnimatedModelResourceFile : public ResourceFile
 
 	HashMap<String, unsigned int> m_BoneMapping;
 	Vector<Matrix> m_BoneOffsets;
-	Vector<Matrix> m_InverseBindTransforms;
-	Vector<Matrix> m_LocalAnimationTransforms;
+	Vector<Matrix> m_AnimationTransforms;
 	Matrix m_RootInverseTransform;
 	
 	SkeletonNode* m_RootNode;
 	HashMap<String, SkeletalAnimation> m_Animations;
 
 	friend class ResourceLoader;
+	friend class AnimatedModelComponent;
 
 public:
 	static void RegisterAPI(sol::state& rootex);
@@ -181,13 +181,12 @@ public:
 	HashMap<String, SkeletalAnimation>& getAnimations() { return m_Animations; }
 	size_t getBoneCount() const { return m_BoneOffsets.size(); }
 
+	void setNodeHeirarchy(aiNode* currentAiNode, SkeletonNode* currentNode);
+	void setAnimationTransforms(SkeletonNode* node, float currentTime, const String& animationName, const Matrix& parentModelTransform, bool isRootFound);
+	
 	Vector<String> getAnimationNames();
 	float getAnimationEndTime(const String& animationName);
-	void setRootTransform(aiNode* currentNode, Matrix parentToRootTransform, bool& isFound);
-	void setNodeHeirarchy(aiNode* currentAiNode, SkeletonNode* currentNode);
 	void getFinalTransforms(const String& animationName, float currentTime, Vector<Matrix>& transforms);
-	void setInverseBindTransforms(aiNode* currentNode, const Matrix& parentModelTransform);
-	void getAnimationTransforms(SkeletonNode* node, float currentTime, const String& animationName, const Matrix& parentModelTransform);
 };
 
 /// Representation of an image file. Supports BMP, JPEG, PNG, TIFF, GIF, HD Photo, or other WIC supported file containers

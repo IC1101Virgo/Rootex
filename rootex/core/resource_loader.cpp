@@ -274,7 +274,7 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 	Assimp::Importer animatedModelLoader;
 	const aiScene* scene = animatedModelLoader.ReadFile(
 	    file->getPath().generic_string(),
-	    aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes | aiProcess_CalcTangentSpace);
+	    aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes | aiProcess_CalcTangentSpace | aiProcess_ConvertToLeftHanded);
 
 	if (!scene)
 	{
@@ -528,16 +528,10 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 		}
 	}
 
-	file->m_LocalAnimationTransforms.resize(boneCount);
-	file->m_InverseBindTransforms.resize(boneCount);
-
-	file->setInverseBindTransforms(scene->mRootNode, Matrix::Identity);
-
 	file->m_RootNode = new SkeletonNode;
 	file->setNodeHeirarchy(scene->mRootNode, file->m_RootNode);
 
-	bool rootFoundFlag = false;
-	file->setRootTransform(scene->mRootNode, Matrix::Identity, rootFoundFlag);
+	file->m_AnimationTransforms.resize(boneCount);
 
 	for (int i = 0; i < scene->mNumAnimations; i++)
 	{
@@ -549,11 +543,12 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 		float ticksPerSecond = anim->mTicksPerSecond ? anim->mTicksPerSecond : 25.0f;
 		float durationInSeconds = durationInTicks / ticksPerSecond;
 		
-		animation.m_Duration = durationInSeconds;
+		animation.setDuration(durationInSeconds);
 
 		for (int j = 0; j < anim->mNumChannels; j++)
 		{
 			const aiNodeAnim* nodeAnim = anim->mChannels[j];
+
 			BoneAnimation boneAnims;
 			for (int k = 0; k < nodeAnim->mNumPositionKeys; k++)
 			{
@@ -565,7 +560,7 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 				keyframe.m_Translation.y = nodeAnim->mPositionKeys[k].mValue.y;
 				keyframe.m_Translation.z = nodeAnim->mPositionKeys[k].mValue.z;
 
-				boneAnims.m_Translation.push_back(keyframe);
+				boneAnims.addTranslationKeyframe(keyframe);
 			}
 
 			for (int k = 0; k < nodeAnim->mNumRotationKeys; k++)
@@ -579,7 +574,8 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 				keyframe.m_Rotation.z = nodeAnim->mRotationKeys[k].mValue.z;
 				keyframe.m_Rotation.w = nodeAnim->mRotationKeys[k].mValue.w;
 
-				boneAnims.m_Rotation.push_back(keyframe);
+				
+				boneAnims.addRotationKeyframe(keyframe);
 			}
 
 			for (int k = 0; k < nodeAnim->mNumScalingKeys; k++)
@@ -592,9 +588,9 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 				keyframe.m_Scaling.y = nodeAnim->mScalingKeys[k].mValue.y;
 				keyframe.m_Scaling.z = nodeAnim->mScalingKeys[k].mValue.z;
 
-				boneAnims.m_Scaling.push_back(keyframe);
+				boneAnims.addScalingKeyframe(keyframe);
 			}
-			animation.m_BoneAnimations[nodeAnim->mNodeName.C_Str()] = boneAnims;
+			animation.addBoneAnimation(nodeAnim->mNodeName.C_Str(), boneAnims);
 		}
 		file->m_Animations[anim->mName.C_Str()] = animation;
 	}

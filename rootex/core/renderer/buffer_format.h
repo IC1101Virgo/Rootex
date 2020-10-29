@@ -13,7 +13,7 @@ struct VertexBufferElement
 		FloatFloatFloat = DXGI_FORMAT_R32G32B32_FLOAT,
 		FloatFloat = DXGI_FORMAT_R32G32_FLOAT,
 		ByteByteByteByte = DXGI_FORMAT_R8G8B8A8_UNORM,
-		IntIntIntInt = DXGI_FORMAT_R8G8B8A8_SINT,
+		IntIntIntInt = DXGI_FORMAT_R32G32B32A32_SINT,
 		FloatFloatFloatFloat = DXGI_FORMAT_R32G32B32A32_FLOAT 
 	};
 
