@@ -170,7 +170,7 @@ class AnimatedModelResourceFile : public ResourceFile
 	friend class AnimatedModelComponent;
 
 public:
-	static void RegisterAPI(sol::state& rootex);
+	static void RegisterAPI(sol::table& rootex);
 
 	static Matrix AiMatrixToMatrix(const aiMatrix4x4& aiMatrix);
 

@@ -175,7 +175,7 @@ AnimatedModelResourceFile::~AnimatedModelResourceFile()
 {
 }
 
-void AnimatedModelResourceFile::RegisterAPI(sol::state& rootex)
+void AnimatedModelResourceFile::RegisterAPI(sol::table& rootex)
 {
 	sol::usertype<AnimatedModelResourceFile> animatedModelResourceFile = rootex.new_usertype<AnimatedModelResourceFile>(
 	    "AnimatedModelResourceFile",

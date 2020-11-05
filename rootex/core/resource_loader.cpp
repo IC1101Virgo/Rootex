@@ -359,7 +359,7 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 		Ref<AnimatedMaterial> extractedMaterial;
 
 		String materialPath;
-		String a = String(material->GetName().C_Str());
+
 		if (String(material->GetName().C_Str()) == "DefaultMaterial")
 		{
 			materialPath = MaterialLibrary::s_AnimatedDefaultMaterialPath;
@@ -388,7 +388,7 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 			{
 				aiString str;
 				material->GetTexture(aiTextureType_DIFFUSE, i, &str);
-				
+
 				char embeddedAsterisk = *str.C_Str();
 
 				if (embeddedAsterisk == '*')
@@ -396,7 +396,7 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 					// Texture is embedded
 					int textureID = atoi(str.C_Str() + 1);
 
-					if (textures[textureID])
+					if (!textures[textureID])
 					{
 						aiTexture* texture = scene->mTextures[textureID];
 						size_t size = scene->mTextures[textureID]->mWidth;
@@ -446,7 +446,7 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 				{
 					String texturePath = normalStr.C_Str();
 					ImageResourceFile* image = ResourceLoader::CreateImageResourceFile(file->getPath().parent_path().generic_string() + "/" + texturePath);
-				
+
 					if (image)
 					{
 						extractedMaterial->setNormal(image);
@@ -454,6 +454,41 @@ void ResourceLoader::LoadAssimp(AnimatedModelResourceFile* file)
 					else
 					{
 						WARN("Could not set material normal map texture: " + texturePath);
+					}
+				}
+			}
+
+			for (int i = 0; i < material->GetTextureCount(aiTextureType_SPECULAR); i++)
+			{
+				aiString specularStr;
+				material->GetTexture(aiTextureType_SPECULAR, i, &specularStr);
+				char embeddedAsterisk = *specularStr.C_Str();
+				if (embeddedAsterisk == '*')
+				{
+					int textureID = atoi(specularStr.C_Str() + 1);
+
+					if (!textures[textureID])
+					{
+						aiTexture* texture = scene->mTextures[textureID];
+						size_t size = scene->mTextures[textureID]->mWidth;
+						PANIC(texture->mHeight == 0, "Compressed texture found but expected embedded texture");
+						textures[textureID].reset(new Texture(reinterpret_cast<const char*>(texture->pcData), size));
+					}
+
+					extractedMaterial->setSpecularInternal(textures[textureID]);
+				}
+				else
+				{
+					String texturePath = specularStr.C_Str();
+					ImageResourceFile* image = ResourceLoader::CreateImageResourceFile(file->getPath().parent_path().generic_string() + "/" + texturePath);
+
+					if (image)
+					{
+						extractedMaterial->setSpecularTexture(image);
+					}
+					else
+					{
+						WARN("Could not set material specular map texture: " + texturePath);
 					}
 				}
 			}

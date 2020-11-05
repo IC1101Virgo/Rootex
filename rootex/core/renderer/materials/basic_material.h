@@ -7,6 +7,8 @@ class Texture;
 class BasicMaterial : public Material
 {
 	BasicShader* m_BasicShader;
+
+protected:
 	Ref<Texture> m_DiffuseTexture;
 	Ref<Texture> m_NormalTexture;
 	Ref<Texture> m_SpecularTexture;
@@ -65,7 +67,7 @@ public:
 
 	virtual ID3D11ShaderResourceView* getPreview() override;
 
-	void bind() override;
+	virtual void bind() override;
 	JSON::json getJSON() const override;
 
 #ifdef ROOTEX_EDITOR
