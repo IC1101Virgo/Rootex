@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model_component.h"
+#include "renderable_component.h"
 
 struct ParticleTemplate
 {
@@ -15,11 +16,11 @@ struct ParticleTemplate
 	float m_LifeTime = 1.0f;
 };
 
-class CPUParticlesComponent : public ModelComponent
+class CPUParticlesComponent : public RenderableComponent
 {
 	static Component* Create(const JSON::json& componentData);
 	static Component* CreateDefault();
-	
+
 	struct Particle
 	{
 		bool m_IsActive = false;
@@ -51,12 +52,14 @@ class CPUParticlesComponent : public ModelComponent
 	EmitMode m_CurrentEmitMode;
 	Vector3 m_EmitterDimensions;
 
+	ModelResourceFile* m_ModelResourceFile;
+
 	friend class EntityFactory;
 
 public:
 	static const ComponentID s_ID = (ComponentID)ComponentIDs::CPUParticlesComponent;
 
-	CPUParticlesComponent(size_t poolSize, const String& particleModelPath, const String& materialPath, const ParticleTemplate& particleTemplate, bool visibility, unsigned int renderPass, EmitMode emitMode, const Vector3& emitterDimensions);
+	CPUParticlesComponent(size_t poolSize, ModelResourceFile* resFile, const String& materialPath, const ParticleTemplate& particleTemplate, bool visibility, unsigned int renderPass, EmitMode emitMode, const Vector3& emitterDimensions);
 	CPUParticlesComponent(CPUParticlesComponent&) = delete;
 	virtual ~CPUParticlesComponent() = default;
 
@@ -66,6 +69,8 @@ public:
 
 	void emit(const ParticleTemplate& particleTemplate);
 	void expandPool(const size_t& poolSize);
+
+	void setVisualModel(ModelResourceFile* newModel, const HashMap<String, String>& materialOverrides);
 
 	virtual String getName() const override { return "CPUParticlesComponent"; }
 	ComponentID getComponentID() const override { return s_ID; }

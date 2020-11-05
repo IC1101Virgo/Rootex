@@ -37,7 +37,7 @@ Component* CPUParticlesComponent::Create(const JSON::json& componentData)
 
 	CPUParticlesComponent* particles = new CPUParticlesComponent(
 		componentData["poolSize"], 
-		componentData["resFile"],
+		ResourceLoader::CreateModelResourceFile(componentData["resFile"]),
 	    componentData["materialPath"],
 		particalTemplate, 
 		componentData["isVisible"],
@@ -55,7 +55,7 @@ Component* CPUParticlesComponent::CreateDefault()
 {
 	CPUParticlesComponent* particles = new CPUParticlesComponent(
 		1000,
-		"rootex/assets/cube.obj",
+		ResourceLoader::CreateModelResourceFile("rootex/assets/cube.obj"),
 	    "rootex/assets/materials/default_particles.rmat",
 		ParticleTemplate(),
 		true,
@@ -65,8 +65,8 @@ Component* CPUParticlesComponent::CreateDefault()
 	return particles;
 }
 
-CPUParticlesComponent::CPUParticlesComponent(size_t poolSize, const String& particleModelPath, const String& materialPath, const ParticleTemplate& particleTemplate, bool visibility, unsigned int renderPass, EmitMode emitMode, const Vector3& emitterDimensions)
-    : ModelComponent(renderPass, ResourceLoader::CreateModelResourceFile(particleModelPath), {}, visibility, {})
+CPUParticlesComponent::CPUParticlesComponent(size_t poolSize, ModelResourceFile* resFile, const String& materialPath, const ParticleTemplate& particleTemplate, bool visibility, unsigned int renderPass, EmitMode emitMode, const Vector3& emitterDimensions)
+    : RenderableComponent(renderPass, {}, visibility, {})
     , m_BasicMaterial(std::dynamic_pointer_cast<BasicMaterial>(MaterialLibrary::GetMaterial(materialPath)))
     , m_ParticleTemplate(particleTemplate)
     , m_TransformComponent(nullptr)
@@ -74,6 +74,7 @@ CPUParticlesComponent::CPUParticlesComponent(size_t poolSize, const String& part
     , m_EmitterDimensions(emitterDimensions)
 {
 	m_AllowedMaterials = { BasicMaterial::s_MaterialName };
+	setVisualModel(resFile, {});
 	expandPool(poolSize);
 	m_EmitRate = 0;
 }
@@ -91,7 +92,7 @@ bool CPUParticlesComponent::setup()
 
 bool CPUParticlesComponent::preRender(float deltaMilliseconds)
 {
-	ModelComponent::preRender(deltaMilliseconds);
+	RenderableComponent::preRender();
 
 	int i = m_EmitRate;
 	while (i >= 0)
@@ -201,9 +202,29 @@ void CPUParticlesComponent::expandPool(const size_t& poolSize)
 	m_PoolIndex = poolSize - 1;
 }
 
+void CPUParticlesComponent::setVisualModel(ModelResourceFile* newModel, const HashMap<String, String>& materialOverrides)
+{
+	if (!newModel)
+	{
+		return;
+	}
+
+	m_ModelResourceFile = newModel;
+	m_MaterialOverrides.clear();
+	for (auto& [material, meshes] : m_ModelResourceFile->getMeshes())
+	{
+		setMaterialOverride(material, material);
+	}
+	for (auto& [oldMaterial, newMaterial] : materialOverrides)
+	{
+		MaterialLibrary::CreateNewMaterialFile(newMaterial, MaterialLibrary::GetMaterial(oldMaterial)->getTypeName());
+		setMaterialOverride(MaterialLibrary::GetMaterial(oldMaterial), MaterialLibrary::GetMaterial(newMaterial));
+	}
+}
+
 JSON::json CPUParticlesComponent::getJSON() const
 {
-	JSON::json& j = ModelComponent::getJSON();
+	JSON::json& j = RenderableComponent::getJSON();
 
 	j["materialPath"] = m_BasicMaterial->getFileName();
 
@@ -235,10 +256,57 @@ JSON::json CPUParticlesComponent::getJSON() const
 
 #ifdef ROOTEX_EDITOR
 #include "imgui.h"
+#include "imgui_stdlib.h"
 void CPUParticlesComponent::draw()
 {
 	ImGui::Text("Model");
-	ModelComponent::draw();
+
+	ImGui::Checkbox("Visible", &m_IsVisible);
+
+	ImGui::BeginGroup();
+
+	String inputPath = m_ModelResourceFile->getPath().generic_string();
+	ImGui::InputText("##Path", &inputPath);
+	ImGui::SameLine();
+	if (ImGui::Button("Create Visual Model"))
+	{
+		if (!ResourceLoader::CreateModelResourceFile(inputPath))
+		{
+			WARN("Could not create Visual Model");
+		}
+		else
+		{
+			inputPath = "";
+		}
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Model"))
+	{
+		EventManager::GetSingleton()->call("OpenModel", "EditorOpenFile", m_ModelResourceFile->getPath().string());
+	}
+	ImGui::EndGroup();
+
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Resource Drop"))
+		{
+			const char* payloadFileName = (const char*)payload->Data;
+			FilePath payloadPath(payloadFileName);
+			if (IsFileSupported(payloadPath.extension().string(), ResourceFile::Type::Model))
+			{
+				setVisualModel(ResourceLoader::CreateModelResourceFile(payloadPath.string()), {});
+			}
+			else
+			{
+				WARN("Unsupported file format for Model");
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
+
+	RenderableComponent::draw();
 
 	ImGui::Separator();
 
